@@ -38,41 +38,29 @@ void connect4::print_board(std::ostream& os){
             os<<"| ";
         
     }
-    /*
+    /*  //  does not work, edge of three in a row considered invalid in certain directions
     const uint64_t& us=onTurn%2 ? red:yellow;
-    uint64_t empty=~(red|yellow|(columns[6]<<1)|255ull|(255ull<<56));  //  more not empty fixed directly down but it's worse
+    uint64_t empty=~(red|yellow|(columns[6]<<1)|255ull|(255ull<<56));
     
     //  horizontal  this one is good
-    uint64_t test=(us<<2)&(us|empty);
-    uint64_t potentialWins=(test&(test<<1))&~(empty&(empty<<1));
-    
-    //  verticle   this one is good, although looking for potential wins directly downward should do nothing so I am concerned
-    test=(us<<16)&(us|empty);
-    potentialWins|=(test&(test<<8))&~(empty&(empty<<8));
+    uint64_t usEmpty=(empty&~(empty<<1))|us;
+    uint64_t test=(usEmpty<<2)&(usEmpty);
+    uint64_t potentialWins=(test&(test<<1));
 
     //  diagonal 1   this one is bad
-    test=(us<<14)&(us|empty);
-    potentialWins|=(test&(test<<7))&~(empty&(empty<<7));
+    usEmpty=(empty&~(empty<<7))|us;
+    test=(usEmpty<<14)&(usEmpty);
+    potentialWins|=(test&(test<<7));
 
     //  diagonal 2   this one is bad
-    test=(us<<18)&(us|empty);
-    potentialWins|=(test&(test<<9))&~(empty&(empty<<9));
-    
-    //  horizontal   this one is good
-    test=(us>>2)&(us|empty);
-    potentialWins|=(test&(test>>1))&~(empty&(empty>>1));
+    usEmpty=(empty&~(empty<<9))|us;
+    test=(usEmpty<<18)&(usEmpty);
+    potentialWins|=(test&(test<<9));
     
     //  verticle   this one is good
-    test=(us>>16)&(us|empty);
-    potentialWins|=(test&(test>>8))&~(empty&(empty>>8));
-
-    //  diagonal 1   this one is bad
-    test=(us>>14)&(us|empty);
-    potentialWins|=(test&(test>>7))&~(empty&(empty>>7));
-
-    //  diagonal 2   this one is bad
-    test=(us>>18)&(us|empty);
-    potentialWins|=(test&(test>>9))&~(empty&(empty>>9));
+    usEmpty=(empty&~(empty>>8))|us;
+    test=(usEmpty>>16)&(usEmpty);
+    potentialWins|=(test&(test>>8));
     
 
     int count=0;

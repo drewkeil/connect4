@@ -1,6 +1,7 @@
 #include "c4AI.h"
 #include <iostream>
 #include <algorithm>
+#include <thread>
 
 
 int c4AI::next_move(connect4& c4, int depth){
@@ -30,6 +31,10 @@ int c4AI::next_move(connect4& c4, int depth){
     return bestCol;
 }
 
+void c4AI::thread_evaluate(connect4 c4,int depth, int* score){
+    *score=-evaluate_board(c4, depth, -1, 1);
+}
+
 int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
     if(depth==0){
         ++numSearched;
@@ -45,6 +50,8 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
         return val-2;
     int moveOrder[7]={3,4,2,1,5,0,6};
     int num=order_moves(c4, moveOrder);
+    if(num==0)  //  it was returning alpha when reaching the end of the game at non-zero depth, whoops
+        return -c4.check_win();
     for(int i=0;i<num;++i){
         c4.place(moveOrder[i]);
         alpha=std::max(alpha, -evaluate_board(c4, depth-1, -beta, -alpha));
@@ -65,15 +72,32 @@ uint64_t c4AI::positions_searched(){
 int c4AI::order_moves(connect4& c4, int moveOrder[]){
     int scores[7]={};
     int notFull=0;
+    bool blockNeeded=false;
     for(int i=0;i<7;++i){
-        
         if(c4.place(i)){
+            if(c4.check_win()){
+                scores[i]+=9999;
+                notFull=1;
+                c4.unplace();
+                break;
+            }//*/
+            if(blockNeeded){
+                c4.unplace();
+                continue;
+            }
             scores[i]+=static_evaluate(c4);
-            scores[i]+=9999*c4.check_win();
+            /*if(c4.place(i)){  //  this searches less nodes but slower search overall
+                scores[i]-=c4.check_win();  //  can't remove move from move pool as it could lead to computer thinking game has ended in a draw
+                c4.unplace();
+            }//*/
             c4.unplace();
             ++c4.onTurn;
             c4.place(i);
-            scores[i]+=999*c4.check_win();
+            if(c4.check_win()){
+                notFull=0;
+                blockNeeded=true;
+                scores[i]+=999;
+            }
             c4.unplace();
             --c4.onTurn;
             ++notFull;

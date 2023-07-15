@@ -28,6 +28,9 @@ private:
     //  evaluates the position as it is, from the perspective of the player whose turn it isn't
     int static_evaluate(connect4& c4);
 
+    //  a function to be used by an individual thread to evaluate a position
+    void thread_evaluate(connect4 c4,int depth, int* score);
+
 };
 
 #endif
