@@ -1,5 +1,6 @@
 #include "connect4.h"
 #include <cassert>
+#include <thread>
 
 connect4::connect4():red(0), yellow(0),placeable(127ull<<48),onTurn(0){}
 

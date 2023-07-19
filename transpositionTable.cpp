@@ -2,7 +2,7 @@
 #include<iostream>
 
 transpositionTable::transpositionTable()
-    :mapCutoff(20), maxDepth(42), deepTable((12)*sectionSize,0), lowTable(100000){}
+    :mapCutoff(20), maxDepth(42), deepTable((12)*sectionSize,0), lowTable(lowTableSize){}
 
 void transpositionTable::setup(int depth, int cutoff){
     maxDepth=depth;

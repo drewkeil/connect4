@@ -2,13 +2,16 @@
 #include <iostream>
 #include <algorithm>
 #include <thread>
-
+#include <cstdlib>
 
 int c4AI::next_move(connect4& c4, int depth){
-    ttable.clear();
+    srand(764858697);
     depth=std::max(depth,1);
+    //really, you don't NEED to clear it, could use results for future search and dramaticaly increace speed during actual play
     ttable.setup(depth, std::min(depth, 20));
     numSearched=0;
+    /*for(int i=0;i<7;++i)  //  slower :(
+        std::thread(&c4AI::thread_search, this, std::ref(c4), depth).detach(); //*/
     int alpha=-1;//-(depth-1);
     int beta=1;//depth-1;
     int moveOrder[7]={3,4,2,1,5,0,6};
@@ -23,16 +26,29 @@ int c4AI::next_move(connect4& c4, int depth){
             bestCol=moveOrder[i];
         }
         if(alpha>=beta){
-            ttable.clear();
             return bestCol;
         }
     }
-    ttable.clear();
     return bestCol;
 }
 
-void c4AI::thread_evaluate(connect4 c4,int depth, int* score){
-    *score=-evaluate_board(c4, depth, -1, 1);
+void c4AI::thread_search(connect4 c4, int depth){
+    int alpha=-1;//-(depth-1);
+    int beta=1;//depth-1;
+    int moveOrder[7]={3,4,2,1,5,0,6};
+    int num=order_moves(c4, moveOrder, true);
+    for(int i=0;i<num;++i){
+        c4.place(moveOrder[i]);
+        int score=-evaluate_board(c4, depth-1, -beta, -alpha);
+        c4.unplace();
+        if(score>alpha){
+            alpha=score;
+        }
+        if(alpha>=beta){
+            return;
+        }
+    }
+    return;
 }
 
 int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
@@ -42,8 +58,8 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
     }
     if(c4.check_win())
         return -1;//return -depth;
-    if(alpha==1)//(alpha>=(depth-1))
-        return alpha;
+    //if(alpha>=(depth-1))
+    //    return alpha;
     uint64_t hash=c4.get_hash();
     int val=ttable.get(hash, depth); 
     if(val)
@@ -52,24 +68,26 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
     int num=order_moves(c4, moveOrder);
     if(num==0)  //  it was returning alpha when reaching the end of the game at non-zero depth, whoops
         return -c4.check_win();
+    int score=-1;
     for(int i=0;i<num;++i){
         c4.place(moveOrder[i]);
-        alpha=std::max(alpha, -evaluate_board(c4, depth-1, -beta, -alpha));
+        score=std::max(score, -evaluate_board(c4, depth-1, -beta, -alpha));
         c4.unplace();
-        if(alpha>=beta){
-            ttable.set(hash, depth, alpha+2);
-            return alpha;
+        if(score>=beta){
+            ttable.set(hash, depth, score+2);
+            return score;
         }
+        alpha=std::max(score,alpha);
     }
-    ttable.set(hash, depth, alpha+2);
-    return alpha;
+    ttable.set(hash, depth, score+2);
+    return score;
 }
 
 uint64_t c4AI::positions_searched(){
     return numSearched;
 }
 
-int c4AI::order_moves(connect4& c4, int moveOrder[]){
+int c4AI::order_moves(connect4& c4, int moveOrder[], bool random){
     int scores[7]={};
     int notFull=0;
     bool blockNeeded=false;
@@ -101,6 +119,8 @@ int c4AI::order_moves(connect4& c4, int moveOrder[]){
             c4.unplace();
             --c4.onTurn;
             ++notFull;
+            if(random)
+                scores[i]+=rand()%50;
         }else
             scores[i]=-1000;  
     }
