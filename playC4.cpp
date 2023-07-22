@@ -13,9 +13,9 @@ int main(){
     do{
         connect4 c4;
         cout<<"\033[2J";
-        int depth;
-        cout<<"    depth for computer search: ";
-        cin>>depth;
+        cout<<"    preparing for search...\n";
+        AI.initialize_search(42,c4);
+        cout<<"    finished\n";
         c4.print_board(cout);
         string selectedCol;
         while(c4.on_turn()<42){
@@ -25,7 +25,7 @@ int main(){
                 if(selectedCol[0]=='e')
                     return 0;
                 else if(selectedCol[0]=='c'){
-                    c4.place(AI.next_move(c4,depth));
+                    c4.place(AI.next_move(c4));
                     if(c4.check_win()){
                         cout<<"\033[9A";
                         c4.print_board(cout);

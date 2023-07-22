@@ -48,9 +48,9 @@ int main(){
         cout<<"  perform alpha beta search? (y/n)\n  ";  //  technicaly it's a negamax search with alpha beta pruning but whatever
         cin>>responce;
         if(responce[0]=='y'){
-            cout<<"  alpha beta search to depth of "<<depth<<'\n';
+            cout<<"  alpha beta search to depth of "<<depth<<"\n";
             auto begin=chrono::high_resolution_clock::now();
-            AI.next_move(c4, depth);
+            AI.initialize_search(depth, c4);
             auto end=chrono::high_resolution_clock::now();
             cout<<"  took "<<(chrono::duration_cast<chrono::milliseconds>(end - begin).count()/1000.0)<<" seconds\n  searched "<<AI.positions_searched()<<" leaf positions\n\n";
         }

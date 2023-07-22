@@ -2,6 +2,7 @@
 #define CONNECT4_H
 
 #include <iostream>
+#include <stdint.h>
 
 // bitboard repersentation is a little gross but doesn't really matter because it's still 64 bits either way (i think)
 
@@ -28,7 +29,7 @@ public:
 
     // places a piece in column col, color is determined by whose turn it is, returns true if placing succeds
     // does nothing and returns false if column col is already filled
-    // REQUIRES: 0<=col<7 and col is not filled
+    // REQUIRES: 0<=col<7
     bool place(int col);
 
     // undoes the most recent placement
@@ -40,6 +41,7 @@ public:
     // returns true if the most recent turn resulted in a win
     bool check_win();
 
+    // does what you think
     uint64_t get_hash();
 
 private:

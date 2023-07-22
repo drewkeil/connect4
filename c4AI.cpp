@@ -4,14 +4,11 @@
 #include <thread>
 #include <cstdlib>
 
-int c4AI::next_move(connect4& c4, int depth){
-    srand(764858697);
-    depth=std::max(depth,1);
-    //really, you don't NEED to clear it, could use results for future search and dramaticaly increace speed during actual play
-    ttable.setup(depth, std::min(depth, 20));
+int c4AI::next_move(connect4& c4){
+    int depth=std::min(initializedDepth, 42-c4.onTurn);
     numSearched=0;
-    /*for(int i=0;i<7;++i)  //  slower :(
-        std::thread(&c4AI::thread_search, this, std::ref(c4), depth).detach(); //*/
+    for(int i=0;i<7;++i)
+        std::thread(&c4AI::thread_search, this, std::ref(c4), initializedDepth).detach(); //*/
     int alpha=-1;//-(depth-1);
     int beta=1;//depth-1;
     int moveOrder[7]={3,4,2,1,5,0,6};
@@ -30,6 +27,32 @@ int c4AI::next_move(connect4& c4, int depth){
         }
     }
     return bestCol;
+}
+
+void c4AI::initialize_search(int depth, connect4& c4){
+    numSearched=0;
+    depth=std::max(depth,1);
+    initializedDepth=depth;
+    ttable.setup(depth, std::min(depth, 20));
+    srand(23546);
+    //  should remove this when implementing improvements so time isn't as effected by randomness
+    for(int i=0;i<7;++i)  //  faster!!!!!!!!!!!! ZOOOOOOOOMMMMMM
+        std::thread(&c4AI::thread_search, this, std::ref(c4), initializedDepth).detach();
+    int moveOrder[7]={3,4,2,1,5,0,6};
+    int num=order_moves(c4, moveOrder);
+    int alpha=-1;//-(depth-1);
+    int beta=1;//depth-1;
+    for(int i=0;i<num;++i){
+        c4.place(moveOrder[i]);
+        int score=-evaluate_board(c4, depth-1, -beta, -alpha);
+        c4.unplace();
+        if(score>alpha){
+            alpha=score;
+        }
+        if(alpha>=beta){
+            return;
+        }
+    }
 }
 
 void c4AI::thread_search(connect4 c4, int depth){
@@ -73,11 +96,11 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
         c4.place(moveOrder[i]);
         score=std::max(score, -evaluate_board(c4, depth-1, -beta, -alpha));
         c4.unplace();
-        if(score>=beta){
-            ttable.set(hash, depth, score+2);
-            return score;
+        alpha=std::max(score, alpha);
+        if(alpha>=beta){
+            ttable.set(hash, depth, alpha+2);
+            return alpha;
         }
-        alpha=std::max(score,alpha);
     }
     ttable.set(hash, depth, score+2);
     return score;
@@ -104,8 +127,12 @@ int c4AI::order_moves(connect4& c4, int moveOrder[], bool random){
                 continue;
             }
             scores[i]+=static_evaluate(c4);
-            /*if(c4.place(i)){  //  this searches less nodes but slower search overall
-                scores[i]-=c4.check_win();  //  can't remove move from move pool as it could lead to computer thinking game has ended in a draw
+            if(c4.place(i)){
+                if(c4.check_win()){
+                    scores[i]-=50;
+                    if(notFull)
+                        --notFull;
+                }
                 c4.unplace();
             }//*/
             c4.unplace();
@@ -120,7 +147,7 @@ int c4AI::order_moves(connect4& c4, int moveOrder[], bool random){
             --c4.onTurn;
             ++notFull;
             if(random)
-                scores[i]+=rand()%50;
+                scores[i]+=rand()%10;
         }else
             scores[i]=-1000;  
     }
@@ -139,7 +166,6 @@ int c4AI::static_evaluate(connect4& c4){
     const uint64_t& us=c4.onTurn%2 ? c4.red:c4.yellow;
     uint64_t empty=~(c4.red|c4.yellow|(c4.columns[6]<<1)|255ull|255ull<<56);
 
-    
     
     //  horizontal
     uint64_t test=(us<<2)&(us|empty);
