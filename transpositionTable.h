@@ -26,11 +26,12 @@ public:
 
 private:
     int mapCutoff;
-    const int sectionSize=500000;
-    const int lowTableSize=10000000;
+    const int sectionSize=5500000;
+    const int lowTableSize=150000000;
     int maxDepth;
     std::vector<uint64_t> deepTable;
     std::vector<uint64_t> lowTable;
+    
     int get_index(uint64_t key, int depth);
 };
 
