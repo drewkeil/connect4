@@ -42,11 +42,8 @@ void transpositionTable::clear(){
 }
 
 int transpositionTable::get_index(uint64_t key, int depth){
-    //  write a psuedo machine learning thing to find the best values and num steps to optimize this
-    //  try using multiplication then a big right shift
-    key^=key>>32;
+    key^=key>>33;
     key^=key>>5;
-    key^=key>>1;
     if((maxDepth-depth)<mapCutoff){
         return key%lowTableSize;
     }

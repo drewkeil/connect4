@@ -11,8 +11,8 @@ connect4::connect4(connect4& other)
 }
 
 bool connect4::place(int col){
-    assert(col>=0&&col<7);
-    if(!(placeable&(columns[col]&~127ull)))
+    //assert(col>=0&&col<7);
+    if(placeable&columns[col]&127ull)
         return false;
     uint64_t& board=(onTurn%2) ? yellow:red;
     board|=(placeable&columns[col]);

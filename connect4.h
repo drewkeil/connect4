@@ -49,6 +49,7 @@ private:
     uint64_t yellow;
     uint64_t placeable;
     const column columns[7]={FIRST,SECOND,THIRD,FOURTH,FIFTH,SIXTH,SEVENTH};
+    // try individual placeable bitborads for each column (possibly as simple replacement of columns array, enum can be used instead)
     int onTurn;
     int colsPlaced[42];
     

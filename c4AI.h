@@ -22,6 +22,7 @@ private:
     uint64_t numSearched;
     transpositionTable ttable;
     int initializedDepth=0;
+    bool stopped=false;
     
     // gives a numerical evaluation repersenting whether a position is winning, losing, or a draw
     // searches [depth] turns ahead

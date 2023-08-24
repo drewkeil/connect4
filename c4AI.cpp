@@ -5,6 +5,7 @@
 #include <cstdlib>
 
 int c4AI::next_move(connect4& c4){
+    stopped=false;
     int depth=std::min(initializedDepth, 42-c4.onTurn);
     numSearched=0;
     for(int i=0;i<7;++i)
@@ -23,20 +24,22 @@ int c4AI::next_move(connect4& c4){
             bestCol=moveOrder[i];
         }
         if(alpha>=beta){
+            stopped=true;
             return bestCol;
         }
     }
+    stopped=true;
     return bestCol;
 }
 
 void c4AI::initialize_search(int depth, connect4& c4){
+    stopped=false;
     numSearched=0;
     depth=std::max(depth,1);
     initializedDepth=depth;
     ttable.setup(depth, std::min(depth, 24));
     srand(23546);
     //  should remove this when implementing improvements so time isn't as effected by randomness
-    //  should add a stop so it doesn't use more than 8 total by accident
     //for(int i=0;i<7;++i)  //  faster!!!!!!!!!!!! ZOOOOOOOOMMMMMM
     //    std::thread(&c4AI::thread_search, this, std::ref(c4), initializedDepth).detach();
     int moveOrder[7]={3,4,2,1,5,0,6};
@@ -51,9 +54,11 @@ void c4AI::initialize_search(int depth, connect4& c4){
             alpha=score;
         }
         if(alpha>=beta){
+            stopped=true;
             return;
         }
     }
+    stopped=true;
 }
 
 void c4AI::thread_search(connect4 c4, int depth){
@@ -62,6 +67,8 @@ void c4AI::thread_search(connect4 c4, int depth){
     int moveOrder[7]={3,4,2,1,5,0,6};
     int num=order_moves(c4, moveOrder, true);
     for(int i=0;i<num;++i){
+        if(stopped)
+            return;
         c4.place(moveOrder[i]);
         int score=-evaluate_board(c4, depth-1, -beta, -alpha);
         c4.unplace();
@@ -95,6 +102,8 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
         c4.place(moveOrder[i]);
         score=std::max(score, -evaluate_board(c4, depth-1, -beta, -alpha));
         c4.unplace();
+        if(stopped)
+            return 0;
         alpha=std::max(score, alpha);
         if(alpha>=beta){
             ttable.set(hash, depth, alpha+2);
@@ -154,7 +163,7 @@ int c4AI::order_moves(connect4& c4, int moveOrder[], bool random){
             scores[i]=-1000;  
     }
     
-    notFull=std::max(notFull,1*ignoredValid); // this is probably unnecessary, but im not sure
+    notFull=std::max(notFull,1*ignoredValid);
     
     for(int i=0;i<6;++i){
         for(int j=i+1;(j>0)&&(scores[moveOrder[j]]>scores[moveOrder[j-1]]);--j){
