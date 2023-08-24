@@ -9,7 +9,7 @@ using namespace std;
 int main(){
     string again;
     c4AI AI;
-    
+    int mostRecent;
     do{
         connect4 c4;
         cout<<"\033[2J";
@@ -32,10 +32,11 @@ int main(){
                         cout<<"\033[2K    Player "<<(c4.on_turn()-1)%2+1<<" is the winner";
                         break;
                     }
-                }else
-                    c4.unplace();
+                }else if(c4.on_turn()>0)
+                    c4.unplace(mostRecent);
             }else{
-                c4.place(selectedCol[0]-'1');
+                if(c4.place(selectedCol[0]-'1'))
+                    mostRecent=selectedCol[0]-'1';
                 if(c4.check_win()){
                     cout<<"\033[9A";
                     c4.print_board(cout);

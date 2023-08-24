@@ -20,7 +20,7 @@ uint64_t perft(int depth, connect4& c4){
     for(int i=0;i<7;++i){
         if(c4.place(i)){
             total+=perft(depth-1, c4);
-            c4.unplace();
+            c4.unplace(i);
         }
     }
     return total;

@@ -18,7 +18,7 @@ int c4AI::next_move(connect4& c4){
     for(int i=0;i<num;++i){
         c4.place(moveOrder[i]);
         int score=-evaluate_board(c4, depth-1, -beta, -alpha);
-        c4.unplace();
+        c4.unplace(moveOrder[i]);
         if(score>alpha){
             alpha=score;
             bestCol=moveOrder[i];
@@ -38,10 +38,10 @@ void c4AI::initialize_search(int depth, connect4& c4){
     depth=std::max(depth,1);
     initializedDepth=depth;
     ttable.setup(depth, std::min(depth, 24));
-    srand(23546);
+    srand(2325468);
     //  should remove this when implementing improvements so time isn't as effected by randomness
-    //for(int i=0;i<7;++i)  //  faster!!!!!!!!!!!! ZOOOOOOOOMMMMMM
-    //    std::thread(&c4AI::thread_search, this, std::ref(c4), initializedDepth).detach();
+    for(int i=0;i<7;++i)  //  faster!!!!!!!!!!!! ZOOOOOOOOMMMMMM
+        std::thread(&c4AI::thread_search, this, std::ref(c4), initializedDepth).detach();
     int moveOrder[7]={3,4,2,1,5,0,6};
     int num=order_moves(c4, moveOrder);
     int alpha=-1;//-(depth-1);
@@ -49,7 +49,7 @@ void c4AI::initialize_search(int depth, connect4& c4){
     for(int i=0;i<num;++i){
         c4.place(moveOrder[i]);
         int score=-evaluate_board(c4, depth-1, -beta, -alpha);
-        c4.unplace();
+        c4.unplace(moveOrder[i]);
         if(score>alpha){
             alpha=score;
         }
@@ -71,7 +71,7 @@ void c4AI::thread_search(connect4 c4, int depth){
             return;
         c4.place(moveOrder[i]);
         int score=-evaluate_board(c4, depth-1, -beta, -alpha);
-        c4.unplace();
+        c4.unplace(moveOrder[i]);
         if(score>alpha){
             alpha=score;
         }
@@ -101,7 +101,7 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
     for(int i=0;i<num;++i){
         c4.place(moveOrder[i]);
         score=std::max(score, -evaluate_board(c4, depth-1, -beta, -alpha));
-        c4.unplace();
+        c4.unplace(moveOrder[i]);
         if(stopped)
             return 0;
         alpha=std::max(score, alpha);
@@ -128,25 +128,25 @@ int c4AI::order_moves(connect4& c4, int moveOrder[], bool random){
             if(c4.check_win()){
                 scores[i]+=9999;
                 notFull=1;
-                c4.unplace();
+                c4.unplace(i);
                 break;
             }//*/
             if(blockNeeded){
-                c4.unplace();
+                c4.unplace(i);
                 continue;
             }
             scores[i]+=static_evaluate(c4);
             if(c4.place(i)){
                 if(c4.check_win()){
                     scores[i]-=50;
-                    c4.unplace();
-                    c4.unplace();
+                    c4.unplace(i);
+                    c4.unplace(i);
                     ignoredValid=true;
                     continue;
                 }else
-                    c4.unplace();
+                    c4.unplace(i);
             }//*/
-            c4.unplace();
+            c4.unplace(i);
             ++c4.onTurn;
             c4.place(i);
             if(c4.check_win()){
@@ -154,7 +154,7 @@ int c4AI::order_moves(connect4& c4, int moveOrder[], bool random){
                 blockNeeded=true;
                 scores[i]+=999;
             }
-            c4.unplace();
+            c4.unplace(i);
             --c4.onTurn;
             ++notFull;
             if(random)
@@ -177,7 +177,7 @@ int c4AI::order_moves(connect4& c4, int moveOrder[], bool random){
 
 int c4AI::static_evaluate(connect4& c4){
     const uint64_t& us=c4.onTurn%2 ? c4.red:c4.yellow;
-    uint64_t empty=~(c4.red|c4.yellow|(c4.columns[6]<<1)|255ull|255ull<<56);
+    uint64_t empty=~(c4.red|c4.yellow|(SEVENTH<<1)|255ull|255ull<<56);
 
     
     //  horizontal

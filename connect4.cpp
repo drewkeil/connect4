@@ -2,22 +2,21 @@
 #include <cassert>
 #include <thread>
 
-connect4::connect4():red(0), yellow(0),placeable(127ull<<48),onTurn(0){}
+connect4::connect4():red(0), yellow(0), onTurn(0){}
 
 connect4::connect4(connect4& other)
-    :red(other.red), yellow(other.yellow), placeable(other.placeable), onTurn(other.onTurn){
-    for(int i=0;i<onTurn;++i)
-        colsPlaced[i]=other.colsPlaced[i];
+    :red(other.red), yellow(other.yellow), onTurn(other.onTurn){
+    for(int i=0;i<7;++i)
+        placeable[i]=other.placeable[i];
 }
 
 bool connect4::place(int col){
     //assert(col>=0&&col<7);
-    if(placeable&columns[col]&127ull)
+    if(placeable[col]&127ull)
         return false;
     uint64_t& board=(onTurn%2) ? yellow:red;
-    board|=(placeable&columns[col]);
-    placeable^=(placeable>>8|placeable)&columns[col];
-    colsPlaced[onTurn]=col;
+    board|=(placeable[col]);
+    placeable[col]>>=8;
     ++onTurn;
     return true;
 }
@@ -42,13 +41,11 @@ void connect4::print_board(std::ostream& os){
     os<<" 1 2 3 4 5 6 7\n";
 }
 
-void connect4::unplace(){
-    if(onTurn==0)
-        return;
+void connect4::unplace(int col){ //  i always know what most recent col is, colsPlaced array is unnecessary, can have int col argument
     --onTurn;
     uint64_t& board=(onTurn%2) ? yellow:red;
-    board^=(placeable<<8)&columns[colsPlaced[onTurn]];
-    placeable^=(placeable<<8|placeable)&columns[colsPlaced[onTurn]];
+    placeable[col]<<=8;
+    board^=placeable[col];
 }
 
 int connect4::on_turn(){
@@ -82,5 +79,9 @@ bool connect4::check_win(){
 }
 
 uint64_t connect4::get_hash(){
-    return placeable|(onTurn%2 ? yellow:red);
+    //uint64_t hash=;
+    //for(int i=0;i<7;++i)  // try lots of | instaad of for (probably not faster), it's like way faster?
+    //    hash|=placeable[i];
+    //return hash;
+    return (onTurn%2 ? yellow:red)|placeable[0]|placeable[1]|placeable[2]|placeable[3]|placeable[4]|placeable[5]|placeable[6];
 }

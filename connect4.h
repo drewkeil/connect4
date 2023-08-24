@@ -32,8 +32,8 @@ public:
     // REQUIRES: 0<=col<7
     bool place(int col);
 
-    // undoes the most recent placement
-    void unplace();
+    // undoes the most recent placement in column [col]
+    void unplace(int col);
 
     // returns the turn number
     int on_turn();
@@ -47,11 +47,10 @@ public:
 private:
     uint64_t red;
     uint64_t yellow;
-    uint64_t placeable;
-    const column columns[7]={FIRST,SECOND,THIRD,FOURTH,FIFTH,SIXTH,SEVENTH};
+    uint64_t placeable[7]={1ull<<48,2ull<<48,4ull<<48,8ull<<48,16ull<<48,32ull<<48,64ull<<48};
+    //const column columns[7]={FIRST,SECOND,THIRD,FOURTH,FIFTH,SIXTH,SEVENTH};
     // try individual placeable bitborads for each column (possibly as simple replacement of columns array, enum can be used instead)
     int onTurn;
-    int colsPlaced[42];
     
     friend class c4AI;
     
