@@ -8,8 +8,8 @@ int c4AI::next_move(connect4& c4){
     stopped=false;
     int depth=std::min(initializedDepth, 42-c4.onTurn);
     numSearched=0;
-    for(int i=0;i<7;++i)
-        std::thread(&c4AI::thread_search, this, std::ref(c4), initializedDepth).detach(); //*/
+    //for(int i=0;i<7;++i)
+    //    std::thread(&c4AI::thread_search, this, std::ref(c4), initializedDepth, i).detach(); //*/
     int alpha=-1;//-(depth-1);
     int beta=1;//depth-1;
     int moveOrder[7]={3,4,2,1,5,0,6};
@@ -38,10 +38,9 @@ void c4AI::initialize_search(int depth, connect4& c4){
     depth=std::max(depth,1);
     initializedDepth=depth;
     ttable.setup(depth, std::min(depth, 24));
-    srand(2325468);
     //  should remove this when implementing improvements so time isn't as effected by randomness
-    for(int i=0;i<7;++i)  //  faster!!!!!!!!!!!! ZOOOOOOOOMMMMMM
-        std::thread(&c4AI::thread_search, this, std::ref(c4), initializedDepth).detach();
+    //for(int i=0;i<7;++i)  // this is broken and i don't know why :(
+    //    std::thread(&c4AI::thread_search, this, std::ref(c4), initializedDepth, i).detach();
     int moveOrder[7]={3,4,2,1,5,0,6};
     int num=order_moves(c4, moveOrder);
     int alpha=-1;//-(depth-1);
@@ -49,6 +48,7 @@ void c4AI::initialize_search(int depth, connect4& c4){
     for(int i=0;i<num;++i){
         c4.place(moveOrder[i]);
         int score=-evaluate_board(c4, depth-1, -beta, -alpha);
+        //std::cout<<"  column "<<moveOrder[i]<<" scored as "<<score<<std::endl;
         c4.unplace(moveOrder[i]);
         if(score>alpha){
             alpha=score;
@@ -61,22 +61,23 @@ void c4AI::initialize_search(int depth, connect4& c4){
     stopped=true;
 }
 
-void c4AI::thread_search(connect4 c4, int depth){
+void c4AI::thread_search(connect4 c4, int depth, int threadNum){
     int alpha=-1;//-(depth-1);
     int beta=1;//depth-1;
     int moveOrder[7]={3,4,2,1,5,0,6};
-    int num=order_moves(c4, moveOrder, true);
-    for(int i=0;i<num;++i){
+    thread_order_moves(moveOrder, threadNum);
+    for(int i=0;i<7;++i){
         if(stopped)
             return;
-        c4.place(moveOrder[i]);
-        int score=-evaluate_board(c4, depth-1, -beta, -alpha);
-        c4.unplace(moveOrder[i]);
-        if(score>alpha){
-            alpha=score;
-        }
-        if(alpha>=beta){
-            return;
+        if(c4.place(moveOrder[i])){
+            int score=-evaluate_board(c4, depth-1, -beta, -alpha);
+            c4.unplace(moveOrder[i]);
+            if(score>alpha){
+                alpha=score;
+            }
+            if(alpha>=beta){
+                return;
+            }
         }
     }
     return;
@@ -91,7 +92,13 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
         return -1;
     uint64_t hash=c4.get_hash();
     int val=ttable.get(hash, depth); 
-    if(val)
+    if(val>3){ // score in ttable is lower bound
+        val-=5;
+        if(val>alpha)
+            alpha=val;
+        if(alpha>=beta)
+            return alpha;
+    }else if(val) // score in ttable is upper bound
         return val-2;
     int moveOrder[7]={3,4,2,1,5,0,6};
     int num=order_moves(c4, moveOrder);
@@ -106,7 +113,7 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
             return 0;
         alpha=std::max(score, alpha);
         if(alpha>=beta){
-            ttable.set(hash, depth, alpha+2);
+            ttable.set(hash, depth, alpha+5); // needs to be cached differently so program knows it is min score
             return alpha;
         }
     }
@@ -118,7 +125,7 @@ uint64_t c4AI::positions_searched(){
     return numSearched;
 }
 
-int c4AI::order_moves(connect4& c4, int moveOrder[], bool random){
+int c4AI::order_moves(connect4& c4, int moveOrder[]){
     int scores[7]={};
     int notFull=0;  //  i should change what this is called but i'm too lazy
     bool blockNeeded=false;
@@ -157,8 +164,6 @@ int c4AI::order_moves(connect4& c4, int moveOrder[], bool random){
             c4.unplace(i);
             --c4.onTurn;
             ++notFull;
-            if(random)
-                scores[i]+=rand()%10;
         }else
             scores[i]=-1000;  
     }
@@ -216,4 +221,10 @@ int c4AI::static_evaluate(connect4& c4){
     }
 
     return count;
+}
+
+void c4AI::thread_order_moves(int moveOrder[], int threadNum){ // this can definintly be improved
+    int temp=moveOrder[0];
+    moveOrder[0]=moveOrder[threadNum];
+    moveOrder[threadNum]=temp;
 }
