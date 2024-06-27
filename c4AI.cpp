@@ -103,13 +103,13 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
     int moveOrder[7]={3,4,2,1,5,0,6};
     int num=order_moves(c4, moveOrder);
     if(num==0)  //  it was returning alpha when reaching the end of the game at non-zero depth, whoops
-        return -c4.check_win();
+        return -c4.check_win(); //TODO: can probably replace this w/ return 0;
     int score=-1;
     for(int i=0;i<num;++i){
         c4.place(moveOrder[i]);
         score=std::max(score, -evaluate_board(c4, depth-1, -beta, -alpha));
         c4.unplace(moveOrder[i]);
-        if(stopped)
+        if(stopped)  //TODO: get rid of this since multithreading doesn't even work anyway
             return 0;
         alpha=std::max(score, alpha);
         if(alpha>=beta){
@@ -183,6 +183,7 @@ int c4AI::order_moves(connect4& c4, int moveOrder[]){
 int c4AI::static_evaluate(connect4& c4){
     const uint64_t& us=c4.onTurn%2 ? c4.red:c4.yellow;
     uint64_t empty=~(c4.red|c4.yellow|(SEVENTH<<1)|255ull|255ull<<56);
+	 //TODO: possibly an intermediate value to store us|empty since the way it is now it probably gets recomputed each time
 
     
     //  horizontal
@@ -214,7 +215,7 @@ int c4AI::static_evaluate(connect4& c4){
     potentialWins|=(test&(test>>9))&~(empty&(empty>>9));
     
 
-    int count=0;
+    int count=0;  //TODO: replacing this with a builtin popcount would likely be faster
     while(potentialWins){
         potentialWins&=potentialWins-1;
         ++count;

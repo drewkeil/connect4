@@ -14,7 +14,7 @@ bool connect4::place(int col){
     //assert(col>=0&&col<7);
     if(placeable[col]&127ull)
         return false;
-    uint64_t& board=(onTurn%2) ? yellow:red;
+    uint64_t& board=(onTurn%2) ? yellow:red; //TODO: computing this once then passing it around like ethan's does could definintly be faster
     board|=(placeable[col]);
     placeable[col]>>=8;
     ++onTurn;
@@ -56,7 +56,7 @@ bool connect4::check_win(){
     const uint64_t& board=onTurn%2 ? red:yellow; // red and yellow switched here because i want the player whose turn it isn't
     
     // verticle
-    uint64_t test=board&(board>>16);
+    uint64_t test=board&(board>>16);  //TODO: might be faster to make temps and | them instead of all the if's
     if(test&(test>>8))
         return true;
 
