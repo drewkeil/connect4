@@ -8,8 +8,6 @@ int c4AI::next_move(connect4& c4){
     stopped=false;
     int depth=std::min(initializedDepth, 42-c4.onTurn);
     numSearched=0;
-    //for(int i=0;i<7;++i)
-    //    std::thread(&c4AI::thread_search, this, std::ref(c4), initializedDepth, i).detach(); //*/
     int alpha=-1;//-(depth-1);
     int beta=1;//depth-1;
     int moveOrder[7]={3,4,2,1,5,0,6};
@@ -38,9 +36,6 @@ void c4AI::initialize_search(int depth, connect4& c4){
     depth=std::max(depth,1);
     initializedDepth=depth;
     ttable.setup(depth, std::min(depth, 24));
-    //  should remove this when implementing improvements so time isn't as effected by randomness
-    //for(int i=0;i<7;++i)  // this is broken and i don't know why :(
-    //    std::thread(&c4AI::thread_search, this, std::ref(c4), initializedDepth, i).detach();
     int moveOrder[7]={3,4,2,1,5,0,6};
     int num=order_moves(c4, moveOrder);
     int alpha=-1;//-(depth-1);
@@ -48,7 +43,6 @@ void c4AI::initialize_search(int depth, connect4& c4){
     for(int i=0;i<num;++i){
         c4.place(moveOrder[i]);
         int score=-evaluate_board(c4, depth-1, -beta, -alpha);
-        //std::cout<<"  column "<<moveOrder[i]<<" scored as "<<score<<std::endl;
         c4.unplace(moveOrder[i]);
         if(score>alpha){
             alpha=score;
@@ -103,14 +97,12 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
     int moveOrder[7]={3,4,2,1,5,0,6};
     int num=order_moves(c4, moveOrder);
     if(num==0)  //  it was returning alpha when reaching the end of the game at non-zero depth, whoops
-        return -c4.check_win(); //TODO: can probably replace this w/ return 0;
+        return 0;
     int score=-1;
     for(int i=0;i<num;++i){
-        c4.place(moveOrder[i]);
-        score=std::max(score, -evaluate_board(c4, depth-1, -beta, -alpha));
-        c4.unplace(moveOrder[i]);
-        if(stopped)  //TODO: get rid of this since multithreading doesn't even work anyway
-            return 0;
+		  connect4 newc4(c4);
+        newc4.place(moveOrder[i]);
+        score=std::max(score, -evaluate_board(newc4, depth-1, -beta, -alpha));
         alpha=std::max(score, alpha);
         if(alpha>=beta){
             ttable.set(hash, depth, alpha+5); // needs to be cached differently so program knows it is min score
@@ -137,7 +129,7 @@ int c4AI::order_moves(connect4& c4, int moveOrder[]){
                 notFull=1;
                 c4.unplace(i);
                 break;
-            }//*/
+            }
             if(blockNeeded){
                 c4.unplace(i);
                 continue;
@@ -152,7 +144,7 @@ int c4AI::order_moves(connect4& c4, int moveOrder[]){
                     continue;
                 }else
                     c4.unplace(i);
-            }//*/
+            }
             c4.unplace(i);
             ++c4.onTurn;
             c4.place(i);
@@ -168,7 +160,7 @@ int c4AI::order_moves(connect4& c4, int moveOrder[]){
             scores[i]=-1000;  
     }
     
-    notFull=std::max(notFull,1*ignoredValid);
+    notFull=std::max(notFull,(int)ignoredValid);
     
     for(int i=0;i<6;++i){
         for(int j=i+1;(j>0)&&(scores[moveOrder[j]]>scores[moveOrder[j-1]]);--j){
@@ -181,9 +173,8 @@ int c4AI::order_moves(connect4& c4, int moveOrder[]){
 }
 
 int c4AI::static_evaluate(connect4& c4){
-    const uint64_t& us=c4.onTurn%2 ? c4.red:c4.yellow;
+    const uint64_t us=c4.onTurn%2 ? c4.red:c4.yellow;
     uint64_t empty=~(c4.red|c4.yellow|(SEVENTH<<1)|255ull|255ull<<56);
-	 //TODO: possibly an intermediate value to store us|empty since the way it is now it probably gets recomputed each time
 
     
     //  horizontal
@@ -214,14 +205,7 @@ int c4AI::static_evaluate(connect4& c4){
     test=(us>>18)&(us|empty);
     potentialWins|=(test&(test>>9))&~(empty&(empty>>9));
     
-
-    int count=0;  //TODO: replacing this with a builtin popcount would likely be faster
-    while(potentialWins){
-        potentialWins&=potentialWins-1;
-        ++count;
-    }
-
-    return count;
+    return __builtin_popcountll(potentialWins);
 }
 
 void c4AI::thread_order_moves(int moveOrder[], int threadNum){ // this can definintly be improved

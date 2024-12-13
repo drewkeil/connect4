@@ -4,14 +4,18 @@
 
 connect4::connect4():red(0), yellow(0), onTurn(0){}
 
-connect4::connect4(connect4& other)
+connect4::connect4(const connect4& other)
     :red(other.red), yellow(other.yellow), onTurn(other.onTurn){
-    for(int i=0;i<7;++i)
-        placeable[i]=other.placeable[i];
+    placeable[0]=other.placeable[0];
+    placeable[1]=other.placeable[1];
+    placeable[2]=other.placeable[2];
+    placeable[3]=other.placeable[3];
+    placeable[4]=other.placeable[4];
+    placeable[5]=other.placeable[5];
+    placeable[6]=other.placeable[6];
 }
 
 bool connect4::place(int col){
-    //assert(col>=0&&col<7);
     if(placeable[col]&127ull)
         return false;
     uint64_t& board=(onTurn%2) ? yellow:red; //TODO: computing this once then passing it around like ethan's does could definintly be faster
@@ -41,7 +45,7 @@ void connect4::print_board(std::ostream& os){
     os<<" 1 2 3 4 5 6 7\n";
 }
 
-void connect4::unplace(int col){ //  i always know what most recent col is, colsPlaced array is unnecessary, can have int col argument
+void connect4::unplace(int col){
     --onTurn;
     uint64_t& board=(onTurn%2) ? yellow:red;
     placeable[col]<<=8;
@@ -56,7 +60,7 @@ bool connect4::check_win(){
     const uint64_t& board=onTurn%2 ? red:yellow; // red and yellow switched here because i want the player whose turn it isn't
     
     // verticle
-    uint64_t test=board&(board>>16);  //TODO: might be faster to make temps and | them instead of all the if's
+    uint64_t test=board&(board>>16);
     if(test&(test>>8))
         return true;
 
@@ -79,9 +83,5 @@ bool connect4::check_win(){
 }
 
 uint64_t connect4::get_hash(){
-    //uint64_t hash=;
-    //for(int i=0;i<7;++i)  // try lots of | instaad of for (probably not faster), it's like way faster?
-    //    hash|=placeable[i];
-    //return hash;
     return (onTurn%2 ? yellow:red)|placeable[0]|placeable[1]|placeable[2]|placeable[3]|placeable[4]|placeable[5]|placeable[6];
 }

@@ -9,7 +9,7 @@ using namespace std;
 int main(){
     string again;
     c4AI AI;
-    int mostRecent;
+    int mostRecent=0;
     do{
         connect4 c4;
         cout<<"\033[2J";

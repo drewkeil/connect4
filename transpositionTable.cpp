@@ -12,28 +12,24 @@ void transpositionTable::setup(int depth, int cutoff){
 }
 
 int transpositionTable::get(uint64_t key, int depth){
+    uint64_t keyAccess=~(255ull<<56);
     if((maxDepth-depth)<mapCutoff){
-        uint64_t keyAccess=~(255ull<<56);
-        uint64_t tableVal=lowTable[get_index(key,depth)];
+        uint64_t tableVal=lowTable[get_low_index(key)];
         if((tableVal&keyAccess)==key)
             return static_cast<int>(tableVal>>56);
-        else
-            return 0;
     }else{
-        uint64_t keyAccess=~(255ull<<56);
-        uint64_t tableVal=deepTable[get_index(key, depth)];
+        uint64_t tableVal=deepTable[get_deep_index(key, depth)];
         if((tableVal&keyAccess)==key)
             return static_cast<int>(tableVal>>56);
-        else
-            return 0;
     }
+	 return 0;
 }
 
 void transpositionTable::set(uint64_t key, int depth, uint8_t value){
     if((maxDepth-depth)<mapCutoff){
-        lowTable[get_index(key,depth)]=(key|(static_cast<uint64_t>(value)<<56));
+        lowTable[get_low_index(key)]=(key|(static_cast<uint64_t>(value)<<56));
     }else
-        deepTable[get_index(key, depth)]=(key|(static_cast<uint64_t>(value)<<56));
+        deepTable[get_deep_index(key, depth)]=(key|(static_cast<uint64_t>(value)<<56));
 }
 
 void transpositionTable::clear(){
@@ -41,11 +37,15 @@ void transpositionTable::clear(){
     lowTable.assign(lowTableSize,0);
 }
 
-int transpositionTable::get_index(uint64_t key, int depth){
+int transpositionTable::get_low_index(uint64_t key){
     key^=key>>33;
     key^=key>>5;
-    if((maxDepth-depth)<mapCutoff){
-        return key%lowTableSize;
-    }
+    return key%lowTableSize;
+}
+
+int transpositionTable::get_deep_index(uint64_t key, int depth){
+    key^=key>>33;
+    key^=key>>5;
     return (depth-1)*sectionSize+(key%sectionSize);
 }
+

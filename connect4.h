@@ -22,7 +22,7 @@ public:
     // creates an empty game board with red to place
     connect4();
 
-    connect4(connect4& other);
+    connect4(const connect4& other);
 
     // prints the board to os
     void print_board(std::ostream& os);
@@ -48,8 +48,6 @@ private:
     uint64_t red;
     uint64_t yellow;
     uint64_t placeable[7]={1ull<<48,2ull<<48,4ull<<48,8ull<<48,16ull<<48,32ull<<48,64ull<<48};
-    //const column columns[7]={FIRST,SECOND,THIRD,FOURTH,FIFTH,SIXTH,SEVENTH};
-    // try individual placeable bitborads for each column (possibly as simple replacement of columns array, enum can be used instead)
     int onTurn;
     
     friend class c4AI;

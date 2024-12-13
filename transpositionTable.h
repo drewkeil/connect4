@@ -32,7 +32,8 @@ private:
     std::vector<uint64_t> deepTable;
     std::vector<uint64_t> lowTable;
     
-    int get_index(uint64_t key, int depth);
+    int get_low_index(uint64_t key);
+    int get_deep_index(uint64_t key, int depth);
 };
 
 #endif

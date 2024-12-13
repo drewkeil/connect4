@@ -11,16 +11,15 @@ using namespace std;
 uint64_t perft(int depth, connect4& c4){
     //cout<<"\033[7A";
     //c4.print_board(cout);
-    
     if((c4.on_turn()!=0)&&c4.check_win())
         return 0;
     if(depth==0)
         return 1;
     uint64_t total=0;
     for(int i=0;i<7;++i){
-        if(c4.place(i)){
-            total+=perft(depth-1, c4);
-            c4.unplace(i);
+	     connect4 newc4(c4);
+        if(newc4.place(i)){
+            total+=perft(depth-1, newc4);
         }
     }
     return total;
