@@ -7,7 +7,7 @@
 // bitboard repersentation is a little gross but doesn't really matter because it's still 64 bits either way (i think)
 
 enum column:uint64_t{
-    FIRST=282578800148737ull, //  no binary literals in c++11 for some reason
+    FIRST=282578800148737ull,
     SECOND=FIRST<<1,
     THIRD=SECOND<<1,
     FOURTH=THIRD<<1,
