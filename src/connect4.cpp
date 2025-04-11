@@ -18,7 +18,7 @@ connect4::connect4(const connect4& other)
 bool connect4::place(int col){
     if(placeable[col]&127ull)
         return false;
-    uint64_t& board=(onTurn%2) ? yellow:red; //TODO: computing this once then passing it around like ethan's does could definintly be faster
+    uint64_t& board=(onTurn%2) ? yellow:red;
     board|=(placeable[col]);
     placeable[col]>>=8;
     ++onTurn;
