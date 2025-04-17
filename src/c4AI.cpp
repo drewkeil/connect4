@@ -10,7 +10,7 @@ int c4AI::next_move(connect4& c4){
     numSearched=0;
     int alpha=-1;//-(depth-1);
     int beta=1;//depth-1;
-    int moveOrder[7]={3,4,2,1,5,0,6};
+    uint8_t moveOrder[7]={3,4,2,1,5,0,6};
     int num=order_moves(c4, moveOrder);
     int bestCol=moveOrder[0];
     for(int i=0;i<num;++i){
@@ -36,7 +36,7 @@ void c4AI::initialize_search(int depth, connect4& c4){
     depth=std::max(depth,1);
     initializedDepth=depth;
     ttable.setup(depth, std::min(depth, 24));
-    int moveOrder[7]={3,4,2,1,5,0,6};
+    uint8_t moveOrder[7]={3,4,2,1,5,0,6};
     int num=order_moves(c4, moveOrder);
     int alpha=-1;//-(depth-1);
     int beta=1;//depth-1;
@@ -58,7 +58,7 @@ void c4AI::initialize_search(int depth, connect4& c4){
 void c4AI::thread_search(connect4 c4, int depth, int threadNum){
     int alpha=-1;//-(depth-1);
     int beta=1;//depth-1;
-    int moveOrder[7]={3,4,2,1,5,0,6};
+    uint8_t moveOrder[7]={3,4,2,1,5,0,6};
     thread_order_moves(moveOrder, threadNum);
     for(int i=0;i<7;++i){
         if(stopped)
@@ -94,9 +94,9 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
             return alpha;
     }else if(val) // score in ttable is upper bound
         return val-2;
-    int moveOrder[7]={3,4,2,1,5,0,6};
+    uint8_t moveOrder[7]={3,4,2,1,5,0,6};
     int num=order_moves(c4, moveOrder);
-    if(num==0)  //  it was returning alpha when reaching the end of the game at non-zero depth, whoops
+    if(num==0)
         return 0;
     int score=-1;
     for(int i=0;i<num;++i){
@@ -117,9 +117,9 @@ uint64_t c4AI::positions_searched(){
     return numSearched;
 }
 
-int c4AI::order_moves(connect4& c4, int moveOrder[]){
+int c4AI::order_moves(connect4& c4, uint8_t moveOrder[]){
     int scores[7]={};
-    int notFull=0;  //  i should change what this is called but i'm too lazy
+    int notFull=0;
     bool blockNeeded=false;
     bool ignoredValid=false;
     for(int i=0;i<7;++i){
@@ -164,7 +164,7 @@ int c4AI::order_moves(connect4& c4, int moveOrder[]){
     
     for(int i=0;i<6;++i){
         for(int j=i+1;(j>0)&&(scores[moveOrder[j]]>scores[moveOrder[j-1]]);--j){
-            int temp=moveOrder[j-1];
+            uint8_t temp=moveOrder[j-1];
             moveOrder[j-1]=moveOrder[j];
             moveOrder[j]=temp;
         }
@@ -208,8 +208,8 @@ int c4AI::static_evaluate(connect4& c4){
     return __builtin_popcountll(potentialWins);
 }
 
-void c4AI::thread_order_moves(int moveOrder[], int threadNum){ // this can definintly be improved
-    int temp=moveOrder[0];
+void c4AI::thread_order_moves(uint8_t moveOrder[], int threadNum){ // this can definintly be improved
+    uint8_t temp=moveOrder[0];
     moveOrder[0]=moveOrder[threadNum];
     moveOrder[threadNum]=temp;
 }
