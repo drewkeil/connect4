@@ -9,9 +9,7 @@ using namespace std;
 
 
 uint64_t perft(int depth, connect4& c4){
-    //cout<<"\033[7A";
-    //c4.print_board(cout);
-    if((c4.on_turn()!=0)&&c4.check_win())
+    if(c4.check_win())
         return 0;
     if(depth==0)
         return 1;
