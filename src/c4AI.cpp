@@ -181,31 +181,31 @@ int c4AI::static_evaluate(connect4& c4){
 
 	
 	//  horizontal
-	uint64_t test=(c4.friends<<2)&(c4.friends|empty);
+	uint64_t test=(c4.enemies<<2)&(c4.enemies|empty);
 	uint64_t potentialWins=(test&(test<<1))&~(empty&(empty<<1));
 
 	//  diagonal 1
-	test=(c4.friends<<14)&(c4.friends|empty);
+	test=(c4.enemies<<14)&(c4.enemies|empty);
 	potentialWins|=(test&(test<<7))&~(empty&(empty<<7));
 
 	//  diagonal 2
-	test=(c4.friends<<18)&(c4.friends|empty);
+	test=(c4.enemies<<18)&(c4.enemies|empty);
 	potentialWins|=(test&(test<<9))&~(empty&(empty<<9));
 	
 	//  horizontal
-	test=(c4.friends>>2)&(c4.friends|empty);
+	test=(c4.enemies>>2)&(c4.enemies|empty);
 	potentialWins|=(test&(test>>1))&~(empty&(empty>>1));
 	
 	//  verticle   
-	test=(c4.friends>>16)&(c4.friends|empty);
+	test=(c4.enemies>>16)&(c4.enemies|empty);
 	potentialWins|=(test&(test>>8))&~(empty&(empty>>8));
 
 	//  diagonal 1
-	test=(c4.friends>>14)&(c4.friends|empty);
+	test=(c4.enemies>>14)&(c4.enemies|empty);
 	potentialWins|=(test&(test>>7))&~(empty&(empty>>7));
 
 	//  diagonal 2
-	test=(c4.friends>>18)&(c4.friends|empty);
+	test=(c4.enemies>>18)&(c4.enemies|empty);
 	potentialWins|=(test&(test>>9))&~(empty&(empty>>9));
 	
 	return __builtin_popcountll(potentialWins);
