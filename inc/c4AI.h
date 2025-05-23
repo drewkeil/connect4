@@ -10,7 +10,7 @@ public:
     
     // attempts to find the optimal next move in a given connect 4 game
     // REQUIRES: the search has been initialized
-    int next_move(connect4& c4);
+    int next_move(connect4& c4, int turn);
 
     //  returns the number of leaf nodes evaluated during most recent call of next_move()
     uint64_t positions_searched();
