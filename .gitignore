@@ -2,3 +2,6 @@
 obj
 playC4
 c4Perft
+perf.data
+perf.data.old
+profile
