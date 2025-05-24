@@ -167,11 +167,12 @@ int c4AI::order_moves(connect4& c4, uint8_t moveOrder[]){
 	notFull=std::max(notFull,(int)ignoredValid);
 	
 	for(int i=0;i<6;++i){
-		for(int j=i+1;(j>0)&&(scores[moveOrder[j]]>scores[moveOrder[j-1]]);--j){
-			uint8_t temp=moveOrder[j-1];
-			moveOrder[j-1]=moveOrder[j];
-			moveOrder[j]=temp;
+		int j = i + 1;
+		uint8_t temp = moveOrder[j];
+		for(;(j>0)&&(scores[temp]>scores[moveOrder[j-1]]);--j){
+			moveOrder[j]=moveOrder[j-1];
 		}
+		moveOrder[j] = temp;
 	}
 	return notFull;
 }

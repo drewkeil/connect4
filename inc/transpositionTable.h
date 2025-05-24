@@ -14,7 +14,6 @@ public:
     void setup(int depth, int cutoff);
 
     //  returns the value associated with the key, a value of 0 means an entry with thay key was not found
-    //  might change to use pair of int and bool
     int get(uint64_t key, int depth);
 
     //  sets the value associated with the given key, if the key is not already found in the table it will be created
