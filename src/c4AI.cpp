@@ -14,7 +14,7 @@ int c4AI::next_move(connect4& c4, int turn){
 	int num=order_moves(c4, moveOrder);
 	int bestCol=moveOrder[0];
 	for(int i=0;i<num;++i){
-		c4.place(moveOrder[i]);
+		c4.place_legal(moveOrder[i]);
 		int score=-evaluate_board(c4, depth-1, -beta, -alpha);
 		c4.unplace(moveOrder[i]);
 		if(score>alpha){
@@ -41,7 +41,7 @@ void c4AI::initialize_search(int depth, connect4& c4){
 	int alpha=-1;//-(depth-1);
 	int beta=1;//depth-1;
 	for(int i=0;i<num;++i){
-		c4.place(moveOrder[i]);
+		c4.place_legal(moveOrder[i]);
 		int score=-evaluate_board(c4, depth-1, -beta, -alpha);
 		c4.unplace(moveOrder[i]);
 		if(score>alpha){
@@ -101,7 +101,7 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
 	int score=-1;
 	for(int i=0;i<num;++i){
 		connect4 newc4(c4);
-		newc4.place(moveOrder[i]);
+		newc4.place_legal(moveOrder[i]);
 		score=std::max(score, -evaluate_board(newc4, depth-1, -beta, -alpha));
 		alpha=std::max(score, alpha);
 		if(alpha>=beta){
@@ -149,7 +149,7 @@ int c4AI::order_moves(connect4& c4, uint8_t moveOrder[]){
 			uint64_t temp = c4.friends;
 			c4.friends = c4.enemies;
 			c4.enemies = temp;
-			c4.place(i);
+			c4.place_legal(i);
 			if(c4.check_win()){
 				notFull=0;
 				blockNeeded=true;

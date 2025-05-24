@@ -26,6 +26,14 @@ bool connect4::place(int col){
 	return true;
 }
 
+void connect4::place_legal(int col){
+	friends|=(placeable[col]);
+	placeable[col]>>=8;
+	uint64_t temp = friends;
+	friends = enemies;
+	enemies = temp;
+}
+
 void connect4::print_board(std::ostream& os, bool redTurn){
 	uint64_t& red    = redTurn ? friends:enemies;
 	uint64_t& yellow = redTurn ? enemies:friends;

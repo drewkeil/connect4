@@ -4,7 +4,7 @@
 #include <iostream>
 #include <stdint.h>
 
-// bitboard repersentation is a little gross but doesn't really matter because it's still 64 bits either way (i think)
+// bitboard representation is a little gross but doesn't really matter because it's still 64 bits either way (i think)
 
 enum column:uint64_t{
 	FIRST=282578800148737ull,
@@ -27,10 +27,14 @@ public:
 	// prints the board to os
 	void print_board(std::ostream& os, bool redTurn);
 
-	// places a piece in column col, color is determined by whose turn it is, returns true if placing succeds
+	// places a piece in column col, color is determined by whose turn it is, returns true if placing succeeds
 	// does nothing and returns false if column col is already filled
 	// REQUIRES: 0<=col<7
 	bool place(int col);
+
+	// same as place() but requires that the placement is legal
+	// REQUIRES: 0<=col<7 AND column [col] is not full
+	void place_legal(int col);
 
 	// undoes the most recent placement in column [col]
 	void unplace(int col);
