@@ -84,28 +84,39 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
 	}
 	if(c4.check_win())
 		return -1;
+
+	int start = 0;
 	uint64_t hash=c4.get_hash();
-	int val=ttable.get(hash, depth); 
-	if(val>3){ // score in ttable is lower bound
-		val-=5;
-		if(val>alpha)
-			alpha=val;
+	if(depth > 1){
+		int val=ttable.get(hash, depth); 
+		if((val & 0xf) > 3){ // score in ttable is lower bound
+			start = (val >> 4) + 1; // if this move didn't trigger a cutoff, none of the moves before it will either
+			val-=5;
+			if(val>alpha)
+				alpha=val;
+		}else if(val){ // score in ttable is upper bound
+			val -= 2;
+			if(val < beta)
+				beta = val;
+		}
 		if(alpha>=beta)
 			return alpha;
-	}else if(val) // score in ttable is upper bound
-		return val-2;
+	}
 	uint8_t moveOrder[7]={3,4,2,1,5,0,6};
 	int num=order_moves(c4, moveOrder);
 	if(num==0)
 		return 0;
 	int score=-1;
-	for(int i=0;i<num;++i){
+	for(int i=start;i<num;++i){
 		connect4 newc4(c4);
 		newc4.place_legal(moveOrder[i]);
 		score=std::max(score, -evaluate_board(newc4, depth-1, -beta, -alpha));
 		alpha=std::max(score, alpha);
 		if(alpha>=beta){
-			ttable.set(hash, depth, alpha+5); // needs to be cached differently so program knows it is min score
+			if(i == (num - 1))
+				ttable.set(hash, depth, alpha+2); // if it's the last move it can be cached as actual score
+			else
+				ttable.set(hash, depth, (alpha+5) | (i << 4)); // needs to be cached differently so program knows it is min score
 			return alpha;
 		}
 	}

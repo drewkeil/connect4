@@ -19,9 +19,14 @@ profile: $(OBJS) obj/profile.o
 run_perf: profile
 	perf record -F 499 --call-graph dwarf -b ./profile
 
-obj/%.o: src/%.cpp
+obj/%.o: src/%.cpp inc/%.h | obj
+	$(CXX) $(C++FLAGS) $(INC) -c $< -o $@
+
+obj/%.o: src/%.cpp | obj
+	$(CXX) $(C++FLAGS) $(INC) -c $< -o $@
+
+obj: 
 	mkdir -p obj
-	$(CXX) $(C++FLAGS) $(INC) -c $^ -o $@
 
 clean:
 	rm -rf $(BINS) obj 
