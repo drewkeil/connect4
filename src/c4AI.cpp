@@ -4,10 +4,20 @@
 #include <thread>
 #include <cstdlib>
 
-int c4AI::next_move(connect4& c4, int turn){
+int c4AI::next_move(connect4& c4, int turn, std::vector<int>& scores){
 	stopped=false;
 	int depth=std::min(initializedDepth, 42-turn);
-	numSearched=0;
+	numSearched=1;
+	for(int i=0;i<7;++i)
+		scores[i] = -2;
+
+	for(int i=0;i<7;++i){
+		if(c4.is_winning(i)){
+			scores[i] = 1;
+			return i;
+		}
+	}
+
 	int alpha=-1;//-(depth-1);
 	int beta=1;//depth-1;
 	uint8_t moveOrder[7]={3,4,2,1,5,0,6};
@@ -16,6 +26,7 @@ int c4AI::next_move(connect4& c4, int turn){
 	for(int i=0;i<num;++i){
 		c4.place_legal(moveOrder[i]);
 		int score=-evaluate_board(c4, depth-1, -beta, -alpha);
+		scores[moveOrder[i]] = score;
 		c4.unplace(moveOrder[i]);
 		if(score>alpha){
 			alpha=score;
@@ -30,12 +41,17 @@ int c4AI::next_move(connect4& c4, int turn){
 	return bestCol;
 }
 
-void c4AI::initialize_search(int depth, connect4& c4){
+int c4AI::initialize_search(int depth, connect4& c4){
 	stopped=false;
 	numSearched=0;
 	depth=std::max(depth,1);
 	initializedDepth=depth;
 	ttable.setup(depth, std::min(depth, 24));
+	for(int i=0;i<7;++i){
+		if(c4.is_winning(i)){
+			return 1;
+		}
+	}
 	uint8_t moveOrder[7]={3,4,2,1,5,0,6};
 	int num=order_moves(c4, moveOrder);
 	int alpha=-1;//-(depth-1);
@@ -49,10 +65,11 @@ void c4AI::initialize_search(int depth, connect4& c4){
 		}
 		if(alpha>=beta){
 			stopped=true;
-			return;
+			return alpha;
 		}
 	}
 	stopped=true;
+	return alpha;
 }
 
 void c4AI::thread_search(connect4 c4, int depth, int threadNum){
@@ -78,8 +95,9 @@ void c4AI::thread_search(connect4 c4, int depth, int threadNum){
 }
 
 int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
+	++numSearched;
+
 	if(depth==0){
-		++numSearched;
 		return 0; // if it's a win that should have been checked by the parent
 	}
 
@@ -94,17 +112,8 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
 	if(depth > 1){
 		int val=ttable.get(hash, depth); 
 		if((val & 0xf) > 3){ // score in ttable is lower bound
-
-			// I think it's safe to do this
-			// if beta was smaller or the same when the value was added to the
-			//    ttable, it will cause a cutoff immediately
-			// if beta was larger then causing a cutoff was "easier" so any move
-			//    that didn't cause a cutoff then won't cause one now, the move
-			//    that caused the cutoff might also be able to be ignored? The
-			//    solver seems to still be correct when ignoring it
-			start = (val >> 4) + 1;
-
-			val-=5;
+			start = val >> 4;
+			val = (val & 0xf) - 5;
 			if(val>alpha)
 				alpha=val;
 		}else if(val){ // score in ttable is upper bound
@@ -119,20 +128,19 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
 	int num=order_moves(c4, moveOrder);
 	if(num==0)
 		return 0;
+	int score = -1;
 	for(int i=start;i<num;++i){
 		connect4 newc4(c4);
 		newc4.place_legal(moveOrder[i]);
-		alpha=std::max(alpha, -evaluate_board(newc4, depth-1, -beta, -alpha));
+		score=std::max(score, -evaluate_board(newc4, depth-1, -beta, -alpha));
+		alpha = std::max(score, alpha);
 		if(alpha>=beta){
-			if(i == (num - 1))
-				ttable.set(hash, depth, alpha+2); // if it's the last move it can be cached as upper bound
-			else
-				ttable.set(hash, depth, (alpha+5) | (i << 4)); // cached differently so program knows it's lower bound
+			ttable.set(hash, depth, (alpha+5) | (i << 4)); // cached differently so program knows it's lower bound
 			return alpha;
 		}
 	}
-	ttable.set(hash, depth, alpha+2);
-	return alpha;
+	ttable.set(hash, depth, score+2);
+	return score;
 }
 
 uint64_t c4AI::positions_searched(){

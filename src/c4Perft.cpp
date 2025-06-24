@@ -39,7 +39,7 @@ int main(){
 			auto begin=chrono::high_resolution_clock::now();
 			uint64_t found=perft(depth, c4);
 			auto end=chrono::high_resolution_clock::now();
-			cout<<"  took "<<(chrono::duration_cast<chrono::milliseconds>(end - begin).count()/1000.0)<<" seconds\n  found "<<found<<" leaf positions\n";
+			cout<<"  took "<<(chrono::duration_cast<chrono::milliseconds>(end - begin).count()/1000.0)<<" seconds\n  searched "<<found<<" nodes\n";
 		}
 
 		cout<<"  perform alpha beta search? (y/n)\n  ";  //  technicaly it's a negamax search with alpha beta pruning but whatever
@@ -49,7 +49,7 @@ int main(){
 			auto begin=chrono::high_resolution_clock::now();
 			AI.initialize_search(depth, c4);
 			auto end=chrono::high_resolution_clock::now();
-			cout<<"  took "<<(chrono::duration_cast<chrono::milliseconds>(end - begin).count()/1000.0)<<" seconds\n  searched "<<AI.positions_searched()<<" leaf positions\n\n";
+			cout<<"  took "<<(chrono::duration_cast<chrono::milliseconds>(end - begin).count()/1000.0)<<" seconds\n  searched "<<AI.positions_searched()<<" nodes\n\n";
 		}
 		cout<<"  enter depth (negative depth to exit): ";
 		cin>>depth;

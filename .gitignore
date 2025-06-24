@@ -5,3 +5,6 @@ c4Perft
 perf.data
 perf.data.old
 profile
+testbench
+testbench*
+test

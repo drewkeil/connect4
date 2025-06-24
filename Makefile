@@ -1,7 +1,7 @@
 CXX = g++
 C++FLAGS = -Wall -Werror -O3 -march=native -flto
 INC = -Iinc
-BINS = playC4 c4Perft profile
+BINS = playC4 c4Perft profile test
 MAINS = $(BINS:%=obj/%.o)
 SRCS = $(wildcard src/*.cpp)
 OBJS = $(filter-out $(MAINS),$(SRCS:src/%.cpp=obj/%.o))
@@ -10,6 +10,9 @@ playC4: $(OBJS) obj/playC4.o
 	$(CXX) $(C++FLAGS) -fwhole-program $(INC) $^ -o $@
 
 c4Perft: $(OBJS) obj/c4Perft.o
+	$(CXX) $(C++FLAGS) -fwhole-program $(INC) $^ -o $@
+
+test: $(OBJS) obj/test.o
 	$(CXX) $(C++FLAGS) -fwhole-program $(INC) $^ -o $@
 
 profile: C++FLAGS += -g3
