@@ -89,6 +89,35 @@ bool connect4::check_win(){
 	return false;
 }
 
+bool connect4::is_winning(int col){
+	if(placeable[col]&127ull)
+		return false;
+
+	uint64_t pieces = friends | placeable[col];
+
+	// verticle
+	uint64_t test=pieces&(pieces>>16);
+	if(test&(test>>8))
+		return true;
+
+	// horizontal
+	test=pieces&(pieces>>2);
+	if(test&(test>>1))
+		return true;
+
+	// first diagonal
+	test=pieces&(pieces>>14);
+	if(test&(test>>7))
+		return true;
+
+	// second diagonal
+	test=pieces&(pieces>>18);
+	if(test&(test>>9))
+		return true;
+
+	return false;
+}
+
 uint64_t connect4::get_hash(){
 	return friends|placeable[0]|placeable[1]|placeable[2]|placeable[3]|placeable[4]|placeable[5]|placeable[6];
 }

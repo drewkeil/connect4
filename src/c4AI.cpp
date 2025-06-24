@@ -80,17 +80,30 @@ void c4AI::thread_search(connect4 c4, int depth, int threadNum){
 int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
 	if(depth==0){
 		++numSearched;
-		return -c4.check_win();
+		return 0; // if it's a win that should have been checked by the parent
 	}
-	if(c4.check_win())
-		return -1;
+
+	for(int i=0;i<7;++i){
+		if(c4.is_winning(i)){
+			return 1;
+		}
+	}
 
 	int start = 0;
 	uint64_t hash=c4.get_hash();
 	if(depth > 1){
 		int val=ttable.get(hash, depth); 
 		if((val & 0xf) > 3){ // score in ttable is lower bound
-			start = (val >> 4) + 1; // if this move didn't trigger a cutoff, none of the moves before it will either
+
+			// I think it's safe to do this
+			// if beta was smaller or the same when the value was added to the
+			//    ttable, it will cause a cutoff immediately
+			// if beta was larger then causing a cutoff was "easier" so any move
+			//    that didn't cause a cutoff then won't cause one now, the move
+			//    that caused the cutoff might also be able to be ignored? The
+			//    solver seems to still be correct when ignoring it
+			start = (val >> 4) + 1;
+
 			val-=5;
 			if(val>alpha)
 				alpha=val;
@@ -106,22 +119,20 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
 	int num=order_moves(c4, moveOrder);
 	if(num==0)
 		return 0;
-	int score=-1;
 	for(int i=start;i<num;++i){
 		connect4 newc4(c4);
 		newc4.place_legal(moveOrder[i]);
-		score=std::max(score, -evaluate_board(newc4, depth-1, -beta, -alpha));
-		alpha=std::max(score, alpha);
+		alpha=std::max(alpha, -evaluate_board(newc4, depth-1, -beta, -alpha));
 		if(alpha>=beta){
 			if(i == (num - 1))
-				ttable.set(hash, depth, alpha+2); // if it's the last move it can be cached as actual score
+				ttable.set(hash, depth, alpha+2); // if it's the last move it can be cached as upper bound
 			else
-				ttable.set(hash, depth, (alpha+5) | (i << 4)); // needs to be cached differently so program knows it is min score
+				ttable.set(hash, depth, (alpha+5) | (i << 4)); // cached differently so program knows it's lower bound
 			return alpha;
 		}
 	}
-	ttable.set(hash, depth, score+2);
-	return score;
+	ttable.set(hash, depth, alpha+2);
+	return alpha;
 }
 
 uint64_t c4AI::positions_searched(){
@@ -131,45 +142,27 @@ uint64_t c4AI::positions_searched(){
 int c4AI::order_moves(connect4& c4, uint8_t moveOrder[]){
 	int scores[7]={};
 	int notFull=0;
-	bool blockNeeded=false;
 	bool ignoredValid=false;
+
 	for(int i=0;i<7;++i){
 		if(c4.place(i)){
-			if(c4.check_win()){
-				scores[i]+=9999;
-				notFull=1;
-				c4.unplace(i);
-				break;
-			}
-			if(blockNeeded){
-				c4.unplace(i);
-				continue;
-			}
-			scores[i]+=static_evaluate(c4);
-			if(c4.place(i)){
-				if(c4.check_win()){
+			if(c4.is_winning(i)){
 					scores[i]-=50;
-					c4.unplace(i);
 					c4.unplace(i);
 					ignoredValid=true;
 					continue;
-				}else
-					c4.unplace(i);
 			}
+			scores[i]+=static_evaluate(c4);
 			c4.unplace(i);
 			uint64_t temp = c4.friends;
 			c4.friends = c4.enemies;
-			c4.enemies = temp;
-			c4.place_legal(i);
-			if(c4.check_win()){
-				notFull=0;
-				blockNeeded=true;
+			if(c4.is_winning(i)){
+				notFull=1;
 				scores[i]+=999;
+				c4.friends = temp;
+				break;
 			}
-			c4.unplace(i);
-			temp = c4.friends;
-			c4.friends = c4.enemies;
-			c4.enemies = temp;
+			c4.friends = temp;
 			++notFull;
 		}else
 			scores[i]=-1000;  

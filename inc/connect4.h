@@ -42,6 +42,9 @@ public:
 	// returns true if the most recent turn resulted in a win
 	bool check_win();
 
+	// returns true if placing in col would result in a win
+	bool is_winning(int col);
+
 	// does what you think
 	uint64_t get_hash();
 
