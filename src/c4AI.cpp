@@ -44,6 +44,7 @@ int c4AI::next_move(connect4& c4, int turn, std::vector<int>& scores){
 int c4AI::initialize_search(int depth, connect4& c4){
 	stopped=false;
 	numSearched=0;
+	resetCounters();
 	depth=std::max(depth,1);
 	initializedDepth=depth;
 	ttable.setup(depth, std::min(depth, 24));
@@ -121,8 +122,10 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
 			if(val < beta)
 				beta = val;
 		}
-		if(alpha>=beta)
+		if(alpha>=beta){
+			ttCutoff();
 			return alpha;
+		}
 	}
 	uint8_t moveOrder[7]={3,4,2,1,5,0,6};
 	int num=order_moves(c4, moveOrder);
@@ -136,6 +139,8 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
 		alpha = std::max(score, alpha);
 		if(alpha>=beta){
 			ttable.set(hash, depth, (alpha+5) | (i << 4)); // cached differently so program knows it's lower bound
+			cutoff();
+			cutoffIndex(i);
 			return alpha;
 		}
 	}

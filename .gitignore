@@ -2,6 +2,7 @@
 obj
 playC4
 c4Perft
+perft_debug
 perf.data
 perf.data.old
 profile

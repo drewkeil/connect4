@@ -23,6 +23,8 @@ uint64_t perft(int depth, connect4& c4){
     return total;
 }
 
+void debug_info(c4AI& solver);
+
 int main(){
 	int depth;
 	connect4 c4;
@@ -50,8 +52,54 @@ int main(){
 			AI.initialize_search(depth, c4);
 			auto end=chrono::high_resolution_clock::now();
 			cout<<"  took "<<(chrono::duration_cast<chrono::milliseconds>(end - begin).count()/1000.0)<<" seconds\n  searched "<<AI.positions_searched()<<" nodes\n\n";
+			debug_info(AI);
 		}
 		cout<<"  enter depth (negative depth to exit): ";
 		cin>>depth;
 	}
+}
+
+void debug_info(c4AI& solver){
+#ifndef NDEBUG
+	// ttable stats
+	uint64_t used = 0;
+	uint64_t collisions = 0;
+	uint64_t usedTemp, collisionsTemp;
+	std::vector<uint64_t>& low = solver.ttable.lowCounts;
+	std::vector<uint64_t>& deep = solver.ttable.deepCounts;
+	for(size_t i=0;i<low.size();++i){
+		if(low[i]){
+			++used;
+			collisions += low[i] - 1;
+		}
+	}
+	cout<<"low table usage "<<used<<'/'<<low.size()<<" ("<<((double)used)/low.size()*100<<"%)\n";
+	cout<<"low table collisions "<<collisions<<" average "<<((double)collisions) / used<<endl;
+	usedTemp = used;
+	collisionsTemp = collisions;
+
+	used = 0;
+	collisions = 0;
+	for(size_t i=0;i<deep.size();++i){
+		if(deep[i]){
+			++used;
+			collisions += deep[i] - 1;
+		}
+	}
+	cout<<"deep table usage "<<used<<'/'<<deep.size()<<" ("<<((double)used)/deep.size()*100<<"%)\n";
+	cout<<"deep table collisions "<<collisions<<" average "<<((double)collisions) / used<<endl;
+
+	collisions += collisionsTemp;
+	used += usedTemp;
+	cout<<"total table usage "<<used<<'/'<<deep.size() + low.size()<<" ("<<((double)used)/(deep.size()+low.size())*100<<"%)\n";
+	cout<<"total table collisions "<<collisions<<" average "<<((double)collisions) / used<<endl;
+
+	// pruning stats
+	cout<<'\n';
+	cout<<"number of cutoffs "<<solver.numCutoffs<<endl;
+	cout<<"cutoffs at each index: \n";
+	for(int i=0;i<7;++i)
+		cout<<i<<": "<<solver.cutoffOrderIndex[i]<<' ';
+	cout<<"\nTransposition table cutoffs "<<solver.ttCutoffs<<endl;
+#endif
 }

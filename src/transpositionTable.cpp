@@ -9,6 +9,10 @@ void transpositionTable::setup(int depth, int cutoff){
     mapCutoff=cutoff;
     deepTable.assign((maxDepth-mapCutoff)*sectionSize,0);
     lowTable.assign(lowTableSize,0);
+#ifndef NDEBUG
+    deepCounts.assign((maxDepth-mapCutoff)*sectionSize,0);
+    lowCounts.assign(lowTableSize,0);
+#endif
 }
 
 int transpositionTable::get(uint64_t key, int depth){
@@ -28,8 +32,16 @@ int transpositionTable::get(uint64_t key, int depth){
 void transpositionTable::set(uint64_t key, int depth, uint8_t value){
     if((maxDepth-depth)<mapCutoff){
         lowTable[get_low_index(key)]=(key|(static_cast<uint64_t>(value)<<56));
-    }else
+    }else{
         deepTable[get_deep_index(key, depth)]=(key|(static_cast<uint64_t>(value)<<56));
+	 }
+#ifndef NDEBUG
+    if((maxDepth-depth)<mapCutoff){
+		 ++lowCounts[get_low_index(key)];
+	 }else{
+		 ++deepCounts[get_deep_index(key, depth)];
+	 }
+#endif
 }
 
 void transpositionTable::clear(){

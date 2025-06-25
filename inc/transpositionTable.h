@@ -8,6 +8,10 @@
 
 class transpositionTable{
 public:
+#ifndef NDEBUG
+    std::vector<uint64_t> deepCounts;
+    std::vector<uint64_t> lowCounts;
+#endif
 
     transpositionTable();
 
@@ -25,8 +29,8 @@ public:
 
 private:
     int mapCutoff;
-    const int sectionSize=5500000;
-    const int lowTableSize=150000000;
+    const int sectionSize=25000000;
+    const int lowTableSize=25000000;
     int maxDepth;
     std::vector<uint64_t> deepTable;
     std::vector<uint64_t> lowTable;
