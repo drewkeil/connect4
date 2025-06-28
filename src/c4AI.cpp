@@ -102,10 +102,27 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
 		return 0; // if it's a win that should have been checked by the parent
 	}
 
+	int block_idx = -1;
 	for(int i=0;i<7;++i){
 		if(c4.is_winning(i)){
 			return 1;
 		}
+		uint64_t tmp = c4.friends;
+		c4.friends=c4.enemies;
+		if(c4.is_winning(i)){
+			if(block_idx != -1)
+				block_idx = -2;
+			else
+				block_idx = i;
+		}
+		c4.friends = tmp;
+	}
+	if(block_idx == -2){
+		return -1;
+	}else if(block_idx != -1){
+		connect4 newc4(c4);
+		newc4.place_legal(block_idx);
+		return -evaluate_board(newc4, depth-1, -beta, -alpha);
 	}
 
 	int start = 0;
@@ -167,15 +184,6 @@ int c4AI::order_moves(connect4& c4, uint8_t moveOrder[]){
 			}
 			scores[i]+=static_evaluate(c4);
 			c4.unplace(i);
-			uint64_t temp = c4.friends;
-			c4.friends = c4.enemies;
-			if(c4.is_winning(i)){
-				notFull=1;
-				scores[i]+=999;
-				c4.friends = temp;
-				break;
-			}
-			c4.friends = temp;
 			++notFull;
 		}else
 			scores[i]=-1000;  
