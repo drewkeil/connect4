@@ -48,11 +48,17 @@ int c4AI::initialize_search(int depth, connect4& c4){
 	depth=std::max(depth,1);
 	initializedDepth=depth;
 	ttable.setup(depth, std::min(depth, 24));
+
 	for(int i=0;i<7;++i){
 		if(c4.is_winning(i)){
 			return 1;
 		}
 	}
+
+	int numThreads = std::thread::hardware_concurrency() / 2;
+	for(int i=0;i<numThreads;++i)
+		std::thread(&c4AI::thread_search, this, std::ref(c4), depth, i).detach();
+
 	uint8_t moveOrder[7]={3,4,2,1,5,0,6};
 	int num=order_moves(c4, moveOrder);
 	int alpha=-1;//-(depth-1);
@@ -66,7 +72,7 @@ int c4AI::initialize_search(int depth, connect4& c4){
 		}
 		if(alpha>=beta){
 			stopped=true;
-			return alpha;
+			break;
 		}
 	}
 	stopped=true;
@@ -154,6 +160,8 @@ int c4AI::evaluate_board(connect4& c4, int depth, int alpha, int beta){
 		newc4.place_legal(moveOrder[i]);
 		score=std::max(score, -evaluate_board(newc4, depth-1, -beta, -alpha));
 		alpha = std::max(score, alpha);
+		if(stopped)
+			return 0;
 		if(alpha>=beta){
 			ttable.set(hash, depth, (alpha+5) | (i << 4)); // cached differently so program knows it's lower bound
 			cutoff();
@@ -239,6 +247,6 @@ int c4AI::static_evaluate(connect4& c4){
 
 void c4AI::thread_order_moves(uint8_t moveOrder[], int threadNum){ // this can definintly be improved
 	uint8_t temp=moveOrder[0];
-	moveOrder[0]=moveOrder[threadNum];
-	moveOrder[threadNum]=temp;
+	moveOrder[0]=moveOrder[threadNum % 7];
+	moveOrder[threadNum % 7]=temp;
 }
